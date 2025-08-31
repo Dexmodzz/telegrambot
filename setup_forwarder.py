@@ -1,6 +1,27 @@
 import os
+import asyncio
+from telethon import TelegramClient
 
-template_py = """
+def list_channels():
+    api_id = int(input("Inserisci API ID: "))
+    api_hash = input("Inserisci API Hash: ")
+    phone = input("Inserisci il tuo numero di telefono: ")
+
+    client = TelegramClient('session_id', api_id, api_hash)
+
+    async def main():
+        await client.start(phone)
+        dialogs = await client.get_dialogs()
+        print("\nLista dei tuoi canali e supergruppi:")
+        for dialog in dialogs:
+            if dialog.is_channel:
+                print(f"Titolo: {dialog.title} | ID: {dialog.id} | Username: {dialog.entity.username}")
+
+    with client:
+        client.loop.run_until_complete(main())
+
+def generate_bot():
+    template_py = """
 import asyncio
 from telethon import TelegramClient, events
 
@@ -28,9 +49,7 @@ client.start()
 client.run_until_disconnected()
 """
 
-template_sh = """#!/bin/bash
-# --- Script per avviare il bot Telegram in background senza virtualenv ---
-
+    template_sh = """#!/bin/bash
 PYTHON=$(which python3)
 BOT_SCRIPT="{py_file}"
 LOG_FILE="${BOT_SCRIPT}.log"
@@ -48,29 +67,31 @@ nohup $PYTHON "$BOT_SCRIPT" > "$LOG_FILE" 2>&1 &
 echo "Bot avviato. Log in $LOG_FILE"
 """
 
-# --- Inserimento dati dall'utente ---
-api_id = input("Inserisci API ID: ")
-api_hash = input("Inserisci API Hash: ")
-phone_number = input("Inserisci numero di telefono: ")
-source_id = int(input("Inserisci ID del canale sorgente: "))
-dest_id = int(input("Inserisci ID del canale destinazione: "))
-kw_input = input("Inserisci parole chiave separate da virgola (o lascia vuoto per tutte): ")
-keywords = [k.strip() for k in kw_input.split(",")] if kw_input else []
+    api_id = input("Inserisci API ID: ")
+    api_hash = input("Inserisci API Hash: ")
+    phone_number = input("Inserisci numero di telefono: ")
+    source_id = int(input("Inserisci ID del canale sorgente: "))
+    dest_id = int(input("Inserisci ID del canale destinazione: "))
+    kw_input = input("Inserisci parole chiave separate da virgola (o lascia vuoto per tutte): ")
+    keywords = [k.strip() for k in kw_input.split(",")] if kw_input else []
 
-# --- Generazione file Python ---
-py_filename = f"forwarder_{source_id}_{dest_id}.py"
-with open(py_filename, "w", encoding="utf-8") as f:
-    f.write(template_py.format(api_id=api_id, api_hash=api_hash, phone_number=phone_number,
-                               source_id=source_id, dest_id=dest_id, keywords=keywords))
+    py_filename = f"forwarder_{source_id}_{dest_id}.py"
+    with open(py_filename, "w", encoding="utf-8") as f:
+        f.write(template_py.format(api_id=api_id, api_hash=api_hash, phone_number=phone_number,
+                                   source_id=source_id, dest_id=dest_id, keywords=keywords))
 
-# --- Generazione file SH ---
-sh_filename = f"start_forwarder_{source_id}_{dest_id}.sh"
-with open(sh_filename, "w", encoding="utf-8") as f:
-    f.write(template_sh.format(py_file=py_filename))
+    sh_filename = f"start_forwarder_{source_id}_{dest_id}.sh"
+    with open(sh_filename, "w", encoding="utf-8") as f:
+        f.write(template_sh.format(py_file=py_filename))
 
-os.chmod(sh_filename, 0o755)
+    os.chmod(sh_filename, 0o755)
 
-print(f"✅ File generati:")
-print(f" - Script Python: {py_filename}")
-print(f" - Script avvio background: {sh_filename}")
-print(f"Avvia il bot con: bash {sh_filename}")
+    print(f"\n✅ File generati:")
+    print(f" - Script Python: {py_filename}")
+    print(f" - Script avvio background: {sh_filename}")
+    print(f"Avvia il bot con: bash {sh_filename}")
+
+if __name__ == "__main__":
+    print("Scegli un'opzione:")
+    print("1. Mostra lista canali e ID")
+    print("2. Genera bot e script di
