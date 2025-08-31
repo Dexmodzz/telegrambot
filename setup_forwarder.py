@@ -150,9 +150,8 @@ fi
 
     print(f"\n✅ File generati:")
     print(f" - Script Python: {py_filename}")
-    print(f" - Script avvio background: {sh_filename}")
-    print(f" - Log file: {log_filename}")
-    print(f"Avvia il bot con: bash {sh_filename}")
+    print(f" - Avvia script background: bash {sh_filename}")
+    print(f" - Log file: tail -f {log_filename} (premi Ctrl+C per uscire, il bot funzionerà in background)")
 
 def list_active_bots():
     print("\n🔍 Bot Python attivi:")
