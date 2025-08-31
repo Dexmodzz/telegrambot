@@ -124,9 +124,23 @@ if [ $? -ne 0 ]; then
     $PYTHON -m pip install telethon --break-system-packages
 fi
 
+echo "Creazione file di log..."
+touch "$LOG_FILE"
+echo "$(date): Avvio del bot..." > "$LOG_FILE"
+
 echo "Avvio del bot in background..."
-nohup $PYTHON -u "$BOT_SCRIPT" > "$LOG_FILE" 2>&1 &
-echo "Bot avviato. Log in $LOG_FILE"
+nohup $PYTHON -u "$BOT_SCRIPT" >> "$LOG_FILE" 2>&1 &
+BOT_PID=$!
+echo "Bot avviato con PID $BOT_PID. Log in $LOG_FILE"
+
+echo "Attendo 3 secondi per verificare l'avvio..."
+sleep 3
+if kill -0 $BOT_PID 2>/dev/null; then
+    echo "✅ Bot avviato correttamente!"
+else
+    echo "❌ Errore nell'avvio del bot. Controlla il log:"
+    tail -10 "$LOG_FILE"
+fi
 """
 
     with open(sh_filename, "w", encoding="utf-8") as f:
