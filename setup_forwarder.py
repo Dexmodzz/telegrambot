@@ -2,12 +2,29 @@ import os
 import asyncio
 from telethon import TelegramClient, events
 
-def list_channels():
-    api_id = int(input("Inserisci API ID: "))
-    api_hash = input("Inserisci API Hash: ")
-    phone = input("Inserisci il tuo numero di telefono: ")
+CREDENTIALS_FILE = "credentials.txt"
 
-    client = TelegramClient('session_id', api_id, api_hash)
+def read_credentials():
+    if os.path.exists(CREDENTIALS_FILE):
+        with open(CREDENTIALS_FILE, "r") as f:
+            lines = [line.strip() for line in f.readlines()]
+            if len(lines) == 3:
+                return lines[0], lines[1], lines[2]  # api_id, api_hash, phone
+    return None, None, None
+
+def save_credentials(api_id, api_hash, phone):
+    with open(CREDENTIALS_FILE, "w") as f:
+        f.write(f"{api_id}\n{api_hash}\n{phone}\n")
+
+def list_channels():
+    api_id, api_hash, phone = read_credentials()
+    if not all([api_id, api_hash, phone]):
+        api_id = int(input("Inserisci API ID: "))
+        api_hash = input("Inserisci API Hash: ")
+        phone = input("Inserisci il tuo numero di telefono: ")
+        save_credentials(api_id, api_hash, phone)
+
+    client = TelegramClient('session_id', int(api_id), api_hash)
 
     async def main():
         await client.start(phone)
@@ -20,6 +37,13 @@ def list_channels():
     asyncio.run(main())
 
 def generate_bot():
+    api_id, api_hash, phone_number = read_credentials()
+    if not all([api_id, api_hash, phone_number]):
+        api_id = int(input("Inserisci API ID: "))
+        api_hash = input("Inserisci API Hash: ")
+        phone_number = input("Inserisci numero di telefono: ")
+        save_credentials(api_id, api_hash, phone_number)
+
     template_py = """
 import asyncio
 from telethon import TelegramClient, events
@@ -48,10 +72,11 @@ client.start()
 client.run_until_disconnected()
 """
 
+    # Correzione variabili shell
     template_sh = """#!/bin/bash
 PYTHON=$(which python3)
 BOT_SCRIPT="{py_file}"
-LOG_FILE="${BOT_SCRIPT}.log"
+LOG_FILE="${{BOT_SCRIPT}}.log"
 
 echo "Verifica installazione Telethon..."
 $PYTHON -m pip show telethon > /dev/null 2>&1
@@ -66,13 +91,10 @@ nohup $PYTHON "$BOT_SCRIPT" > "$LOG_FILE" 2>&1 &
 echo "Bot avviato. Log in $LOG_FILE"
 """
 
-    api_id = input("Inserisci API ID: ")
-    api_hash = input("Inserisci API Hash: ")
-    phone_number = input("Inserisci numero di telefono: ")
     source_id = int(input("Inserisci ID del canale sorgente: "))
     dest_id = int(input("Inserisci ID del canale destinazione: "))
     kw_input = input("Inserisci parole chiave separate da virgola (o lascia vuoto per tutte): ")
-    keywords = [k.strip() for k in kw_input.split(",")] if kw_input else []
+    keywords = [k.strip() for k in kw_input.split(",") if k.strip()] if kw_input else []
 
     py_filename = f"forwarder_{source_id}_{dest_id}.py"
     with open(py_filename, "w", encoding="utf-8") as f:
