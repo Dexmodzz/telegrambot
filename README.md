@@ -12,7 +12,7 @@ telethon
 1. Posizionare la cartella sulla VPS.
 2. Installare dipendenze:
    ```bash
-   pip3 install -r requirements.txt
+   pip3 install -r requirements.txt --break-system-packages
 
 
 Eseguire lo script:
@@ -32,3 +32,4 @@ Avvio bot
 Lo script genera anche uno .sh per avviare il bot in background con log.
 
 bash start_<nome_bot>.sh
+
