@@ -94,4 +94,12 @@ echo "Bot avviato. Log in $LOG_FILE"
 if __name__ == "__main__":
     print("Scegli un'opzione:")
     print("1. Mostra lista canali e ID")
-    print("2. Genera bot e script di
+    print("2. Genera bot e script di avvio")
+
+    choice = input("Inserisci scelta (1 o 2): ")
+    if choice == "1":
+        list_channels()
+    elif choice == "2":
+        generate_bot()
+    else:
+        print("Scelta non valida")
