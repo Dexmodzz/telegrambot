@@ -10,7 +10,7 @@ def read_credentials():
         with open(CREDENTIALS_FILE, "r") as f:
             lines = [line.strip() for line in f.readlines()]
             if len(lines) == 3:
-                return lines[0], lines[1], lines[2]  # api_id, api_hash, phone
+                return lines[0], lines[1], lines[2]
     return None, None, None
 
 def save_credentials(api_id, api_hash, phone):
@@ -47,7 +47,6 @@ def generate_bot():
 
     bot_name = input("Scegli un nome per il bot (senza spazi): ").strip()
     if not bot_name:
-        print("Nome non valido. Usiamo 'forwarder_bot' come default.")
         bot_name = "forwarder_bot"
 
     template_py = """
@@ -144,7 +143,6 @@ def list_active_bots():
         kill_option = input("\nVuoi terminare un bot attivo? (s/n): ").lower()
         if kill_option == 's':
             bot_name = input("Scrivi il nome dello script del bot da terminare (es: forwarder_123_456.py o nome scelto): ").strip()
-            # Trova il PID
             for line in bots:
                 if bot_name in line:
                     pid = int(line.split()[1])
