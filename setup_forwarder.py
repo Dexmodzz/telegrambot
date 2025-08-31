@@ -93,10 +93,12 @@ client.run_until_disconnected()
     log_filename = f"{bot_name}.log"
     sh_filename = f"start_{bot_name}.sh"
 
+    # Scrivi script Python del bot
     with open(py_filename, "w", encoding="utf-8") as f:
         f.write(template_py.format(api_id=api_id, api_hash=api_hash, phone_number=phone_number,
                                    source_id=source_id, dest_id=dest_id, keywords=keywords))
 
+    # Genera lo script di avvio in background con log funzionante (-u)
     template_sh = f"""#!/bin/bash
 PYTHON=$(which python3)
 BOT_SCRIPT="{py_filename}"
@@ -111,7 +113,7 @@ if [ $? -ne 0 ]; then
 fi
 
 echo "Avvio del bot in background..."
-nohup $PYTHON "$BOT_SCRIPT" > "$LOG_FILE" 2>&1 &
+nohup $PYTHON -u "$BOT_SCRIPT" > "$LOG_FILE" 2>&1 &
 echo "Bot avviato. Log in $LOG_FILE"
 """
 
@@ -133,7 +135,7 @@ def list_active_bots():
         lines = result.stdout.splitlines()
         bots = []
         for line in lines:
-            if 'forwarder_' in line and '.py' in line and 'python' in line:
+            if 'forwarder_' in line or '.py' in line:
                 print(line)
                 bots.append(line)
         if not bots:
@@ -142,7 +144,7 @@ def list_active_bots():
 
         kill_option = input("\nVuoi terminare un bot attivo? (s/n): ").lower()
         if kill_option == 's':
-            bot_name = input("Scrivi il nome dello script del bot da terminare (es: forwarder_123_456.py o nome scelto): ").strip()
+            bot_name = input("Scrivi il nome dello script del bot da terminare (es: smartinvestorclub.py): ").strip()
             for line in bots:
                 if bot_name in line:
                     pid = int(line.split()[1])
