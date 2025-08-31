@@ -52,16 +52,22 @@ def generate_bot():
     template_py = """
 import asyncio
 from telethon import TelegramClient, events
+import os
 
-api_id = {api_id}
-api_hash = "{api_hash}"
-phone_number = "{phone_number}"
+# 🔑 Leggi credenziali da file (NESSUN input)
+CREDENTIALS_FILE = "credentials.txt"
+
+with open(CREDENTIALS_FILE, "r") as f:
+    lines = [line.strip() for line in f.readlines()]
+    api_id = int(lines[0])
+    api_hash = lines[1]
+    phone_number = lines[2]
 
 source_chat_id = {source_id}
 destination_channel_id = {dest_id}
 keywords = {keywords}
 
-client = TelegramClient('session_{phone_number}', api_id, api_hash)
+client = TelegramClient(f'session_{{phone_number}}', api_id, api_hash)
 
 @client.on(events.NewMessage(chats=source_chat_id))
 async def handler(event):
@@ -98,7 +104,7 @@ client.run_until_disconnected()
         f.write(template_py.format(api_id=api_id, api_hash=api_hash, phone_number=phone_number,
                                    source_id=source_id, dest_id=dest_id, keywords=keywords))
 
-    # Genera lo script di avvio in background con log funzionante (-u)
+    # Genera lo script di avvio in background
     template_sh = f"""#!/bin/bash
 PYTHON=$(which python3)
 BOT_SCRIPT="{py_filename}"
@@ -135,7 +141,7 @@ def list_active_bots():
         lines = result.stdout.splitlines()
         bots = []
         for line in lines:
-            if 'forwarder_' in line or '.py' in line:
+            if '.py' in line:
                 print(line)
                 bots.append(line)
         if not bots:
