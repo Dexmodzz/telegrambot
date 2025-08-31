@@ -1,6 +1,6 @@
 import os
 import asyncio
-from telethon import TelegramClient
+from telethon import TelegramClient, events
 
 def list_channels():
     api_id = int(input("Inserisci API ID: "))
@@ -17,8 +17,7 @@ def list_channels():
             if dialog.is_channel:
                 print(f"Titolo: {dialog.title} | ID: {dialog.id} | Username: {dialog.entity.username}")
 
-    with client:
-        client.loop.run_until_complete(main())
+    asyncio.run(main())
 
 def generate_bot():
     template_py = """
