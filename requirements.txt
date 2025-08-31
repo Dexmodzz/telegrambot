@@ -1,1 +1,1 @@
-telethon
+telethon --break-system-packages
