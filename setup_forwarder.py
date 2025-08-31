@@ -63,9 +63,9 @@ with open(CREDENTIALS_FILE, "r") as f:
     api_hash = lines[1]
     phone_number = lines[2]
 
-session_file = f"session_{phone_number}.session"
+session_file = "session_" + phone_number + ".session"
 if not os.path.exists(session_file):
-    print(f"❌ Sessione non trovata: {session_file}")
+    print("❌ Sessione non trovata: " + session_file)
     print("   Avvia il bot una volta in modalità interattiva per generare la sessione.")
     sys.exit(1)
 
@@ -73,7 +73,7 @@ source_chat_id = {source_id}
 destination_channel_id = {dest_id}
 keywords = {keywords}
 
-client = TelegramClient(f'session_{phone_number}', api_id, api_hash)
+client = TelegramClient('session_' + phone_number, api_id, api_hash)
 
 @client.on(events.NewMessage(chats=source_chat_id))
 async def handler(event):
@@ -91,7 +91,7 @@ async def heartbeat():
 
 print("🔍 Avvio del bot...")
 client.loop.create_task(heartbeat())
-client.start()
+client.start(phone=phone_number)
 print("✅ Bot connesso correttamente a Telegram e in esecuzione...")
 client.run_until_disconnected()
 """
