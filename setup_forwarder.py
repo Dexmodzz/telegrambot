@@ -1,6 +1,7 @@
 import os
 import asyncio
 from telethon import TelegramClient, events
+import subprocess
 
 CREDENTIALS_FILE = "credentials.txt"
 
@@ -44,6 +45,11 @@ def generate_bot():
         phone_number = input("Inserisci numero di telefono: ")
         save_credentials(api_id, api_hash, phone_number)
 
+    bot_name = input("Scegli un nome per il bot (senza spazi): ").strip()
+    if not bot_name:
+        print("Nome non valido. Usiamo 'forwarder_bot' come default.")
+        bot_name = "forwarder_bot"
+
     template_py = """
 import asyncio
 from telethon import TelegramClient, events
@@ -67,16 +73,35 @@ async def handler(event):
     else:
         await client.send_message(destination_channel_id, event.message.text)
 
-print("🔍 Monitoraggio avviato...")
+async def heartbeat():
+    while True:
+        print("💓 Bot attivo...")
+        await asyncio.sleep(60)
+
+print("🔍 Avvio del bot...")
+client.loop.create_task(heartbeat())
 client.start()
+print("✅ Bot connesso correttamente a Telegram e in esecuzione...")
 client.run_until_disconnected()
 """
 
-    # Correzione variabili shell
-    template_sh = """#!/bin/bash
+    source_id = int(input("Inserisci ID del canale sorgente: "))
+    dest_id = int(input("Inserisci ID del canale destinazione: "))
+    kw_input = input("Inserisci parole chiave separate da virgola (o lascia vuoto per tutte): ")
+    keywords = [k.strip() for k in kw_input.split(",") if k.strip()] if kw_input else []
+
+    py_filename = f"{bot_name}.py"
+    log_filename = f"{bot_name}.log"
+    sh_filename = f"start_{bot_name}.sh"
+
+    with open(py_filename, "w", encoding="utf-8") as f:
+        f.write(template_py.format(api_id=api_id, api_hash=api_hash, phone_number=phone_number,
+                                   source_id=source_id, dest_id=dest_id, keywords=keywords))
+
+    template_sh = f"""#!/bin/bash
 PYTHON=$(which python3)
-BOT_SCRIPT="{py_file}"
-LOG_FILE="${{BOT_SCRIPT}}.log"
+BOT_SCRIPT="{py_filename}"
+LOG_FILE="{log_filename}"
 
 echo "Verifica installazione Telethon..."
 $PYTHON -m pip show telethon > /dev/null 2>&1
@@ -91,36 +116,58 @@ nohup $PYTHON "$BOT_SCRIPT" > "$LOG_FILE" 2>&1 &
 echo "Bot avviato. Log in $LOG_FILE"
 """
 
-    source_id = int(input("Inserisci ID del canale sorgente: "))
-    dest_id = int(input("Inserisci ID del canale destinazione: "))
-    kw_input = input("Inserisci parole chiave separate da virgola (o lascia vuoto per tutte): ")
-    keywords = [k.strip() for k in kw_input.split(",") if k.strip()] if kw_input else []
-
-    py_filename = f"forwarder_{source_id}_{dest_id}.py"
-    with open(py_filename, "w", encoding="utf-8") as f:
-        f.write(template_py.format(api_id=api_id, api_hash=api_hash, phone_number=phone_number,
-                                   source_id=source_id, dest_id=dest_id, keywords=keywords))
-
-    sh_filename = f"start_forwarder_{source_id}_{dest_id}.sh"
     with open(sh_filename, "w", encoding="utf-8") as f:
-        f.write(template_sh.format(py_file=py_filename))
+        f.write(template_sh)
 
     os.chmod(sh_filename, 0o755)
 
     print(f"\n✅ File generati:")
     print(f" - Script Python: {py_filename}")
     print(f" - Script avvio background: {sh_filename}")
+    print(f" - Log file: {log_filename}")
     print(f"Avvia il bot con: bash {sh_filename}")
+
+def list_active_bots():
+    print("\n🔍 Bot Python attivi:")
+    try:
+        result = subprocess.run(['ps', 'aux'], stdout=subprocess.PIPE, text=True)
+        lines = result.stdout.splitlines()
+        bots = []
+        for line in lines:
+            if 'forwarder_' in line and '.py' in line and 'python' in line:
+                print(line)
+                bots.append(line)
+        if not bots:
+            print("Nessun bot attivo trovato.")
+            return
+
+        kill_option = input("\nVuoi terminare un bot attivo? (s/n): ").lower()
+        if kill_option == 's':
+            bot_name = input("Scrivi il nome dello script del bot da terminare (es: forwarder_123_456.py o nome scelto): ").strip()
+            # Trova il PID
+            for line in bots:
+                if bot_name in line:
+                    pid = int(line.split()[1])
+                    os.kill(pid, 9)
+                    print(f"Bot {bot_name} terminato (PID {pid})")
+                    break
+            else:
+                print("Nessun bot trovato con quel nome.")
+    except Exception as e:
+        print(f"Errore durante la ricerca dei bot attivi: {e}")
 
 if __name__ == "__main__":
     print("Scegli un'opzione:")
     print("1. Mostra lista canali e ID")
     print("2. Genera bot e script di avvio")
+    print("3. Mostra bot attivi e termina uno")
 
-    choice = input("Inserisci scelta (1 o 2): ")
+    choice = input("Inserisci scelta (1, 2 o 3): ")
     if choice == "1":
         list_channels()
     elif choice == "2":
         generate_bot()
+    elif choice == "3":
+        list_active_bots()
     else:
         print("Scelta non valida")
