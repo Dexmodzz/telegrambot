@@ -169,7 +169,7 @@ def list_active_bots():
 
         kill_option = input("\nVuoi terminare un bot attivo? (s/n): ").lower()
         if kill_option == 's':
-            bot_name = input("Scrivi il nome dello script del bot da terminare (es: smartinvestorclub.py): ").strip()
+            bot_name = input("Scrivi il nome dello script del bot da terminare (es: nome_bot.py): ").strip()
             for line in bots:
                 if bot_name in line:
                     pid = int(line.split()[1])
