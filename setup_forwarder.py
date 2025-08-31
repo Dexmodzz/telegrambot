@@ -53,8 +53,8 @@ def generate_bot():
 import asyncio
 from telethon import TelegramClient, events
 import os
+import sys
 
-# 🔑 Leggi credenziali da file (NESSUN input)
 CREDENTIALS_FILE = "credentials.txt"
 
 with open(CREDENTIALS_FILE, "r") as f:
@@ -63,11 +63,17 @@ with open(CREDENTIALS_FILE, "r") as f:
     api_hash = lines[1]
     phone_number = lines[2]
 
+session_file = f"session_{phone_number}.session"
+if not os.path.exists(session_file):
+    print(f"❌ Sessione non trovata: {session_file}")
+    print("   Avvia il bot una volta in modalità interattiva per generare la sessione.")
+    sys.exit(1)
+
 source_chat_id = {source_id}
 destination_channel_id = {dest_id}
 keywords = {keywords}
 
-client = TelegramClient(f'session_{{phone_number}}', api_id, api_hash)
+client = TelegramClient(f'session_{phone_number}', api_id, api_hash)
 
 @client.on(events.NewMessage(chats=source_chat_id))
 async def handler(event):
@@ -177,3 +183,4 @@ if __name__ == "__main__":
         list_active_bots()
     else:
         print("Scelta non valida")
+
